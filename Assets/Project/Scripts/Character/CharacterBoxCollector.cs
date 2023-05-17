@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using Architecture;
 using Interfaces;
 using UnityEngine;
 using View;
@@ -9,19 +11,23 @@ namespace Character
     {
         [SerializeField] private UIView uiView;
         [SerializeField] private CharacterAnimator characterAnimator;
+        [SerializeField] private CharacterMovement characterMovement;
         [SerializeField] private int timeBoxCollection;
         
-        private Coroutine _timerCoroutine;
+        private CoroutineObject _timerCoroutine;
         private IInteractive _box;
-        
+
+        private void Awake()
+        {
+            _timerCoroutine = new CoroutineObject(this, TimerCollection);
+        }
+
         private void StartCollect()
         {
-            if (_timerCoroutine == null)
-            {
-                _timerCoroutine = StartCoroutine(TimerCollection());
-                characterAnimator.Collect();
-                uiView.PanelCollect(true);
-            }
+            characterMovement.ClearTarget();
+            _timerCoroutine.Start();
+            characterAnimator.Collect();
+            uiView.PanelCollect(true);
         }
 
         private void Interaction()
@@ -45,21 +51,19 @@ namespace Character
             uiView.PanelCollect(false);
             characterAnimator.StopCollect();
             
-            _timerCoroutine = null;
             _box = null;
         }
         
         public void StopCollect()
         {
-            if (_timerCoroutine != null)
-            {
-                StopCoroutine(_timerCoroutine);
-                characterAnimator.StopCollect();
-                uiView.PanelCollect(false);
+            if(!_timerCoroutine.IsProcessing)
+                return;
                 
-                _timerCoroutine = null;
-                _box = null;
-            }
+            _timerCoroutine.Stop();
+            uiView.PanelCollect(false);
+            characterAnimator.StopCollect();
+            
+            _box = null;
         }
         
         public void Collect(IInteractive obj)

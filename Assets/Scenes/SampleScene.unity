@@ -900,6 +900,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   uiView: {fileID: 385077413}
   characterAnimator: {fileID: 1431369139}
+  characterMovement: {fileID: 363786950}
   timeBoxCollection: 3
 --- !u!114 &363786953
 MonoBehaviour:

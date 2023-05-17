@@ -1,4 +1,7 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections;
+using Architecture;
+using UnityEngine;
 using UnityEngine.Events;
 
 namespace Scene
@@ -6,27 +9,27 @@ namespace Scene
     public class Timer : MonoBehaviour
     {
         private float _timeGame;
-        private bool _isTimer;
-
-        public float TimeGame => _timeGame;
-        public UnityEvent<float> TimeUpdate;
-
-        private void Update()
-        {
-            if(!_isTimer) return;
-            
-            _timeGame += Time.deltaTime;
-            TimeUpdate?.Invoke(_timeGame);
-        }
+        private CoroutineObject _coroutineTimer;
         
-        public void StartTimer()
+        public UnityEvent<float> TimeUpdate;
+        
+        public float TimeGame => _timeGame;
+        public void StartTimer() => _coroutineTimer.Start();
+        public void StopTimer() => _coroutineTimer.Stop();
+
+        private void Awake()
         {
-            _isTimer = true;
+            _coroutineTimer = new CoroutineObject(this, CoroutineTimer);
         }
 
-        public void StopTimer()
+        private IEnumerator CoroutineTimer()
         {
-            _isTimer = false;
+            while (true)
+            {
+                _timeGame += Time.deltaTime;
+                TimeUpdate?.Invoke(_timeGame);
+                yield return null;
+            }
         }
     }
 }

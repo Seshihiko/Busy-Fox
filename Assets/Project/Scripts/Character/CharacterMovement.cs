@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using Architecture;
+using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Events;
 
@@ -11,22 +13,19 @@ namespace Character
         [SerializeField] private float stopingDistance;
 
         private Vector3 _target;
+        private CoroutineObject _coroutineMovement;
 
         [HideInInspector] public UnityEvent<bool> IsWalking;
 
-        private void Start()
+        private void Awake()
         {
             IsWalking.AddListener(characterAnimator.Walking);
+            _coroutineMovement = new CoroutineObject(this, CoroutineMovement);
         }
 
-        private void FixedUpdate()
+        private IEnumerator CoroutineMovement()
         {
-            Movement();
-        }
-
-        private void Movement()
-        {
-            if (_target != Vector3.zero)
+            while (true)
             {
                 navMeshAgent.SetDestination(_target);
 
@@ -36,9 +35,10 @@ namespace Character
                 {
                     ClearTarget();
                 }
+                
+                IsWalking.Invoke(!navMeshAgent.isStopped);
+                yield return null;
             }
-
-            IsWalking.Invoke(_target != Vector3.zero);
         }
 
         public void SetSpeed(float speed)
@@ -49,11 +49,15 @@ namespace Character
         public void SetTarget(Vector3 target)
         {
             _target = target;
+            
+            navMeshAgent.Resume();
+            _coroutineMovement.Start();
         }
 
         public void ClearTarget()
         {
-            _target = Vector3.zero;
+            navMeshAgent.Stop();
+            _coroutineMovement.Stop();
         }
     }
 }
